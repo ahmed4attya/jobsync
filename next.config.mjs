@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // output: "standalone", // TEMP: disabled for faster builds
+  output: "standalone",
   devIndicators: false,
   async headers() {
     return [

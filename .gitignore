@@ -86,3 +86,11 @@ evals/*/_investigate-*
 build-*.log
 *.backup
 jobsyncdb/backups/
+
+# owner-internal: methodology, memory and session tools (kept local, never committed)
+/PROJECT-PROTOCOL.md
+/PROJECT_CONTEXT.md
+/MASTER-PROMPT.txt
+/MEMORY.md
+/jobsync_local_upgrade.ps1
+/doc/

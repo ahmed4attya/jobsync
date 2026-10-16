@@ -78,3 +78,11 @@ evals/agent-chat/tools.json
 # re-run, but not part of the shipped suite. See the runs they produced in
 # docs/architecture/agent-chat.md.
 evals/*/_investigate-*
+
+# phase-0 rescue: backups, archives and collection temp dirs
+/backups/
+/_archive/
+/zz_collection/
+build-*.log
+*.backup
+jobsyncdb/backups/

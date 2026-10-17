@@ -90,6 +90,13 @@ export function Combobox({
       switch (field.name) {
         case "company":
           const res = await addCompany({ company: label });
+          if (!res.success) {
+            // D-05: a failed/duplicate company create must not pass silently —
+            // tell the user and close the popover so the dialog stays usable.
+            toastError(res.message);
+            setIsPopoverOpen(false);
+            return;
+          }
           response = res.data;
           break;
         case "title":
@@ -208,10 +215,13 @@ export function Combobox({
                 <p className="font-semibold text-primary">No source found!</p>
               )}
             </CommandEmpty>
+            {/* Search matches value + label: canonicalized values drop legal
+                suffixes (e.g. "Co"), so a full-label search never matched its
+                own company (D-04). */}
             <CommandGroup>
               {options.map((option) => (
                 <CommandItem
-                  value={option.value}
+                  value={`${option.value ?? ""} ${option.label}`}
                   key={option.id}
                   onSelect={() => {
                     if (field.onChange) {

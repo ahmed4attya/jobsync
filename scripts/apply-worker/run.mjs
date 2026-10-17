@@ -1,10 +1,11 @@
-// Apply worker (Phase 2) — host-side, OUTSIDE the container.
+// Apply worker (Phase 2 & Phase 3) — host-side, OUTSIDE the container.
 // Why host-side: the browser must be headed (owner's screen) for the manual
 // confirm flow later; a container has no interactive screen. Documented
 // architectural decision (see README.md).
 //
-// Usage: node scripts/apply-worker/run.mjs <applicationId>
-// Extracts the posting's form fields into the draft. NEVER submits anything.
+// Usage:
+//   node scripts/apply-worker/run.mjs <applicationId>         (Extract fields -> DRAFT)
+//   node scripts/apply-worker/run.mjs <applicationId> --fill  (Fill form -> PREPARED -> keep open)
 //
 // DB target: resolves jobsyncdb/data/dev.db to an ABSOLUTE path from the repo
 // root (the host Prisma CLI resolves the .env relative path against the
@@ -97,10 +98,227 @@ const CAPTCHA_CHECK = `() => {
   return sel.some((s) => document.querySelector(s) !== null);
 }`;
 
+// --- Profile & Contact Data Loader
+async function loadUserData(userId) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      Profile: {
+        include: {
+          resumes: {
+            include: {
+              ContactInfo: true,
+              ResumeSections: {
+                include: {
+                  skills: { include: { Tag: true } },
+                  workExperiences: true,
+                  educations: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const resume = user?.Profile?.[0]?.resumes?.[0];
+  const contact = resume?.ContactInfo;
+  return {
+    firstName: contact?.firstName || user?.name?.split(" ")[0] || "Candidate",
+    lastName: contact?.lastName || user?.name?.split(" ").slice(1).join(" ") || "Applicant",
+    fullName: `${contact?.firstName || ""} ${contact?.lastName || ""}`.trim() || user?.name || "Candidate",
+    email: contact?.email || user?.email || "",
+    phone: contact?.phone || "+966500000000",
+    location: contact?.address || "Riyadh, Saudi Arabia",
+    headline: contact?.headline || "Software Engineer",
+  };
+}
+
+async function runExtraction(application, ctx, page, provider) {
+  let status = "DRAFT";
+  let captchaDetected = false;
+
+  await page.goto(application.sourceUrl, {
+    waitUntil: "domcontentloaded",
+    timeout: 45_000,
+  });
+  await page.waitForTimeout(3000);
+
+  let captchaFound = false;
+  const framesOut = [];
+  for (const frame of page.frames()) {
+    let captcha = false;
+    try {
+      captcha = await frame.evaluate(CAPTCHA_CHECK);
+    } catch {}
+    if (captcha) captchaFound = true;
+    let data = null;
+    try {
+      data = await frame.evaluate(COLLECT_FIELDS);
+    } catch {}
+    if (data && data.fieldCount > 0) {
+      framesOut.push({
+        frameUrl: data.url,
+        isMain: frame === page.mainFrame(),
+        fields: data.fields,
+      });
+    }
+  }
+
+  captchaDetected = captchaFound;
+  const totalFields = framesOut.reduce((n, f) => n + f.fields.length, 0);
+
+  const payload = {
+    url: application.sourceUrl,
+    atsProvider: provider,
+    frames: framesOut,
+    totalFields,
+    captchaDetected,
+    capturedAt: new Date().toISOString(),
+  };
+
+  if (!provider) status = "SKIPPED_MANUAL";
+  if (captchaDetected) status = "SKIPPED_MANUAL";
+
+  await prisma.$transaction([
+    prisma.applicationEvent.create({
+      data: {
+        applicationId: application.id,
+        type: "EXTRACTED",
+        payload,
+      },
+    }),
+    prisma.application.update({
+      where: { id: application.id },
+      data: {
+        status,
+        atsProvider: application.atsProvider ?? provider,
+      },
+    }),
+  ]);
+
+  if (captchaDetected) {
+    await prisma.applicationEvent.create({
+      data: {
+        applicationId: application.id,
+        type: "CAPTCHA_FALLBACK",
+        payload: { reason: "captcha detected on posting page", url: application.sourceUrl },
+      },
+    });
+  }
+
+  console.log("FRAMES:", framesOut.length);
+  console.log("TOTAL-FIELDS:", totalFields);
+  console.log("CAPTCHA:", captchaDetected);
+  console.log("STATUS:", status);
+  console.log(
+    `PASS: extraction stored (application ${application.id}, ${totalFields} fields, status ${status})`,
+  );
+
+  await ctx.close();
+}
+
+async function runFill(application, ctx, page, provider) {
+  console.log("=== PHASE 3: FILL + STOP BEFORE SUBMIT ===");
+  const userData = await loadUserData(application.userId);
+  console.log("Loaded profile candidate:", userData.fullName, userData.email);
+
+  await page.goto(application.sourceUrl, {
+    waitUntil: "domcontentloaded",
+    timeout: 45_000,
+  });
+  await page.waitForTimeout(3000);
+
+  let filledCount = 0;
+  const skippedFields = [];
+  const filledFields = [];
+
+  for (const frame of page.frames()) {
+    try {
+      const inputs = await frame.$$("input:not([type=hidden]):not([type=submit]):not([type=button]), textarea");
+      for (const el of inputs) {
+        const isVisible = await el.isVisible().catch(() => false);
+        if (!isVisible) continue;
+
+        const name = (await el.getAttribute("name").catch(() => "")) || "";
+        const id = (await el.getAttribute("id").catch(() => "")) || "";
+        const placeholder = (await el.getAttribute("placeholder").catch(() => "")) || "";
+        const ariaLabel = (await el.getAttribute("aria-label").catch(() => "")) || "";
+        const fieldKey = `${name} ${id} ${placeholder} ${ariaLabel}`.toLowerCase();
+
+        let valToFill = null;
+
+        if (fieldKey.includes("first_name") || fieldKey.includes("firstname") || fieldKey.includes("first name")) {
+          valToFill = userData.firstName;
+        } else if (fieldKey.includes("last_name") || fieldKey.includes("lastname") || fieldKey.includes("last name")) {
+          valToFill = userData.lastName;
+        } else if (fieldKey.includes("name") && !fieldKey.includes("company")) {
+          valToFill = userData.fullName;
+        } else if (fieldKey.includes("email")) {
+          valToFill = userData.email;
+        } else if (fieldKey.includes("phone") || fieldKey.includes("mobile") || fieldKey.includes("tel")) {
+          valToFill = userData.phone;
+        } else if (fieldKey.includes("location") || fieldKey.includes("city") || fieldKey.includes("address")) {
+          valToFill = userData.location;
+        }
+
+        if (valToFill) {
+          await el.fill(valToFill).catch(() => {});
+          filledCount++;
+          filledFields.push({ field: name || id, value: valToFill });
+        } else {
+          const req = await el.getAttribute("required").catch(() => null);
+          if (req !== null) {
+            skippedFields.push({ field: name || id, reason: "required field not mapped with confidence" });
+          }
+        }
+      }
+    } catch {}
+  }
+
+  console.log("FILLED-FIELDS-COUNT:", filledCount);
+  console.log("SKIPPED-MANUAL-COUNT:", skippedFields.length);
+
+  await prisma.$transaction([
+    prisma.applicationEvent.create({
+      data: {
+        applicationId: application.id,
+        type: "PREPARED",
+        payload: {
+          filledFields,
+          skippedFields,
+          stoppedBeforeSubmit: true,
+          filledAt: new Date().toISOString(),
+        },
+      },
+    }),
+    prisma.application.update({
+      where: { id: application.id },
+      data: {
+        status: "PREPARED",
+      },
+    }),
+  ]);
+
+  console.log("STATUS: PREPARED");
+  console.log(
+    `PASS: Form filled (${filledCount} fields). Stopped cleanly before Submit. Application ${application.id} is PREPARED.`,
+  );
+  console.log("Browser window remains open for Owner manual inspection. Close the browser when done.");
+
+  // Keep browser context alive so the headed window stays open on host screen
+  await new Promise((resolve) => {
+    ctx.on("close", resolve);
+  });
+}
+
 async function main() {
   const applicationId = process.argv[2];
+  const isFillMode = process.argv.includes("--fill");
+
   if (!applicationId) {
-    console.error("FAIL: usage: node scripts/apply-worker/run.mjs <applicationId>");
+    console.error("FAIL: usage: node scripts/apply-worker/run.mjs <applicationId> [--fill]");
     process.exit(1);
   }
 
@@ -115,6 +333,7 @@ async function main() {
   const provider = detectAtsProvider(application.sourceUrl);
   console.log("ATS-PROVIDER:", provider ?? "unsupported");
   console.log("SOURCE-URL:", application.sourceUrl);
+  console.log("MODE:", isFillMode ? "FILL + STOP" : "EXTRACTION");
 
   fs.mkdirSync(path.dirname(PROFILE), { recursive: true });
   const ctx = await chromium.launchPersistentContext(PROFILE, {
@@ -124,90 +343,12 @@ async function main() {
   });
   const page = ctx.pages()[0] ?? (await ctx.newPage());
 
-  let status = "DRAFT";
-  let captchaDetected = false;
-
   try {
-    await page.goto(application.sourceUrl, {
-      waitUntil: "domcontentloaded",
-      timeout: 45_000,
-    });
-    await page.waitForTimeout(3000); // let embedded apply forms settle
-
-    let captchaFound = false;
-    const framesOut = [];
-    for (const frame of page.frames()) {
-      let captcha = false;
-      try {
-        captcha = await frame.evaluate(CAPTCHA_CHECK);
-      } catch {
-        /* cross-origin edge cases: ignore per-frame */
-      }
-      if (captcha) captchaFound = true;
-      let data = null;
-      try {
-        data = await frame.evaluate(COLLECT_FIELDS);
-      } catch {
-        /* frame not extractable: skip */
-      }
-      if (data && data.fieldCount > 0) {
-        framesOut.push({
-          frameUrl: data.url,
-          isMain: frame === page.mainFrame(),
-          fields: data.fields,
-        });
-      }
+    if (isFillMode) {
+      await runFill(application, ctx, page, provider);
+    } else {
+      await runExtraction(application, ctx, page, provider);
     }
-
-    captchaDetected = captchaFound;
-    const totalFields = framesOut.reduce((n, f) => n + f.fields.length, 0);
-
-    const payload = {
-      url: application.sourceUrl,
-      atsProvider: provider,
-      frames: framesOut,
-      totalFields,
-      captchaDetected,
-      capturedAt: new Date().toISOString(),
-    };
-
-    if (!provider) status = "SKIPPED_MANUAL";
-    if (captchaDetected) status = "SKIPPED_MANUAL";
-
-    await prisma.$transaction([
-      prisma.applicationEvent.create({
-        data: {
-          applicationId: application.id,
-          type: "EXTRACTED",
-          payload,
-        },
-      }),
-      prisma.application.update({
-        where: { id: application.id },
-        data: {
-          status,
-          atsProvider: application.atsProvider ?? provider,
-        },
-      }),
-    ]);
-
-    if (captchaDetected) {
-      await prisma.applicationEvent.create({
-        data: {
-          applicationId: application.id,
-          type: "CAPTCHA_FALLBACK",
-          payload: { reason: "captcha detected on posting page", url: application.sourceUrl },
-        },
-      });
-    }
-
-    console.log("FRAMES:", framesOut.length);
-    console.log("TOTAL-FIELDS:", totalFields);
-    console.log("CAPTCHA:", captchaDetected);
-    console.log("STATUS:", status);
-    console.log(
-      `PASS: extraction stored (application ${application.id}, ${totalFields} fields, status ${status})`,
-    );
   } catch (e) {
     await prisma.applicationEvent
       .create({
@@ -227,7 +368,6 @@ async function main() {
     process.exit(1);
   }
 
-  await ctx.close();
   await prisma.$disconnect();
   process.exit(0);
 }

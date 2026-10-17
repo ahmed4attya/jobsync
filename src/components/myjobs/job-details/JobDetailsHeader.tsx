@@ -2,6 +2,7 @@
 
 import {
   ArrowLeft,
+  ClipboardList,
   FileText,
   MoreVertical,
   Pencil,
@@ -111,6 +112,22 @@ export function JobDetailsHeader({
             Match with AI
           </span>
         </Button>
+        {/* Apply engine: isolated link to the draft page (no submit anywhere). */}
+        {job.jobUrl && (
+          <Button
+            variant="outline"
+            className="cursor-pointer"
+            data-testid="prepare-application-btn"
+            asChild
+          >
+            <Link href={`/dashboard/myjobs/${job.id}/apply`}>
+              <ClipboardList className="h-4 w-4 sm:mr-2" />
+              <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                Prepare Application
+              </span>
+            </Link>
+          </Button>
+        )}
         <Button
           variant="outline"
           className="cursor-pointer"

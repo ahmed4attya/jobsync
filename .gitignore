@@ -94,3 +94,6 @@ jobsyncdb/backups/
 /MEMORY.md
 /jobsync_local_upgrade.ps1
 /doc/
+
+# apply-engine persistent browser profile (host-only)
+/_private/

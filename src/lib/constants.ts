@@ -8,6 +8,7 @@ import {
   Wrench,
   Zap,
   BookOpen,
+  CalendarCheck,
 } from "lucide-react";
 
 export const APP_CONSTANTS = {
@@ -17,6 +18,8 @@ export const APP_CONSTANTS = {
   ATS_COMPANY_PAGE_SIZE: 50,
   MAX_AUTOMATIONS_PER_USER: 10,
   MAX_JOB_TAGS: 10,
+  // Due date given to a new job when none is supplied, on every creation path
+  DEFAULT_JOB_DUE_DAYS: 3,
   MIN_QUESTION_LENGTH: 5,
   MAX_QUESTION_LENGTH: 500,
   MIN_QUESTION_ANSWER_LENGTH: 10,
@@ -24,6 +27,7 @@ export const APP_CONSTANTS = {
   MAX_SKILL_CATEGORIES: 8,
   MAX_SKILLS_PER_CATEGORY: 20,
   MIN_RESUME_SECTIONS_FOR_SELECTION: 2,
+  RESUME_PICKER_LIMIT: 100,
   ACTIVITY_MAX_DURATION_MINUTES: 8 * 60, // 8 Hours
   ACTIVITY_MAX_DURATION_MS: 8 * 60 * 60 * 1000, // 8 hours in milliseconds
   ACTIVITY_MIN_DURATION_MINUTES: 2, // activities shorter than this are discarded
@@ -48,14 +52,18 @@ export const APP_CONSTANTS = {
   SIDEBAR_DOM_ID: "app-sidebar",
 
   // Update check: the upstream repo and how long a GitHub release lookup is
-  // cached. A day is plenty — releases are rare and the check is unauthenticated.
+  // cached. A day is plenty ظ¤ releases are rare and the check is unauthenticated.
   GITHUB_REPO: "Gsync/jobsync",
   UPDATE_CHECK_REVALIDATE_SECONDS: 86_400,
   // Paired so the rail width and its matching content offset can't drift.
   SIDEBAR_WIDTH: {
-    expanded: { rail: "w-56", contentOffset: "sm:pr-56" },
-    collapsed: { rail: "w-14", contentOffset: "sm:pr-14" },
+    expanded: { rail: "w-56", contentOffset: "sm:pl-56" },
+    collapsed: { rail: "w-14", contentOffset: "sm:pl-14", px: 56 },
   },
+
+  // Cloud API-key verification timeout. Without it a black-holed TLS
+  // handshake (VPN MTU mismatch) leaves the Verify button spinning forever.
+  AI_VERIFY_TIMEOUT_MS: 10_000,
 
   // Ollama API timeouts
   AI_OLLAMA_LIST_TIMEOUT_MS: 5_000,
@@ -63,7 +71,7 @@ export const APP_CONSTANTS = {
 
   // Ollama context window (covers prompt + generation combined). Defaults to
   // 2048; even 4096 overflows for a full resume plus the system prompt and the
-  // verbatim JSON output — truncating the tail of generation (e.g. the last
+  // verbatim JSON output ظ¤ truncating the tail of generation (e.g. the last
   // experience/certification entries get dropped).
   AI_OLLAMA_NUM_CTX: 8192,
 
@@ -129,7 +137,7 @@ export const APP_CONSTANTS = {
   LEVER_FETCH_TIMEOUT_MS: 25_000, // wraps the WHOLE paginated loop per board
   LEVER_FETCH_CONCURRENCY: 5,
 
-  // Ashby (public posting API — unauthenticated, whole board in one call)
+  // Ashby (public posting API ظ¤ unauthenticated, whole board in one call)
   ASHBY_BASE_URL: "https://api.ashbyhq.com/posting-api/job-board",
   ASHBY_JOB_URL: "https://jobs.ashbyhq.com", // public board page (not API)
   ASHBY_FETCH_TIMEOUT_MS: 25_000, // per-board AbortController timeout
@@ -140,7 +148,7 @@ export const APP_CONSTANTS = {
   MCP_TOKEN_EXPIRY_PRESETS: [30, 90, 365] as const,
   MCP_TOKEN_EXPIRY_DEFAULT_DAYS: 90,
   MCP_TOKEN_MAX_PER_USER: 10,
-  MCP_RATE_LIMIT_MAX: 60,
+  MCP_RATE_LIMIT_MAX: 100,
   MCP_RATE_LIMIT_WINDOW_MS: 60 * 60 * 1000,
   MCP_DEFAULT_JOB_TYPE: "Full-time",
   MCP_DEFAULT_STATUS: "draft",
@@ -205,23 +213,23 @@ export const APP_CONSTANTS = {
   // No fallback model constant, deliberately. An unset settings.ai.model is
   // a pre-stream 503 pointing at Settings, not a silently substituted model
   // the user never chose.
-  // Must not be "ai-panel-width" — that key belongs to the three AI sheets.
+  // Must not be "ai-panel-width" ظ¤ that key belongs to the three AI sheets.
   AGENT_CHAT_PANEL_WIDTH_KEY: "agent-chat-width",
 
   // Telemetry (OTLP export)
   // Flush cadence. A batch is never serialized in the enqueueing caller's
-  // stack — reaching the batch size only arms the timer.
+  // stack ظ¤ reaching the batch size only arms the timer.
   TELEMETRY_FLUSH_INTERVAL_MS: 5_000,
   // Consecutive-failure backoff, resets to the first entry on any success.
   // A collector down for a day is retried a few dozen times, not 17,000.
   TELEMETRY_BACKOFF_MS: [5_000, 30_000, 60_000],
-  // Bounded queue, drops oldest — mirrors MAX_LOGS_PER_RUN in
+  // Bounded queue, drops oldest ظ¤ mirrors MAX_LOGS_PER_RUN in
   // automation-logger.ts. A dead collector cannot grow memory without limit.
   TELEMETRY_MAX_QUEUE: 1_000,
   TELEMETRY_BATCH_SIZE: 200,
   TELEMETRY_EXPORT_TIMEOUT_MS: 5_000,
   // A resume-review prompt runs 10-50 KB; this caps what leaves the process.
-  // Not the same thing as jobsync.input.truncated — see spec section 8.
+  // Not the same thing as jobsync.input.truncated ظ¤ see spec section 8.
   TELEMETRY_MAX_ATTR_CHARS: 32_000,
 
   // File uploads
@@ -231,13 +239,13 @@ export const APP_CONSTANTS = {
   // bounds memory on a box also running Next and the scheduler; the
   // uncompressed cap is the zip-bomb guard. 50 MB rather than the spec's 25:
   // resumes are 5 MB each and PDFs barely deflate, so six of them produce an
-  // export a 25 MB cap would refuse — a backup you cannot restore is worse
+  // export a 25 MB cap would refuse ظ¤ a backup you cannot restore is worse
   // than a large one.
   BACKUP_MAX_UPLOAD_BYTES: 50 * 1024 * 1024,
   BACKUP_MAX_UNCOMPRESSED_BYTES: 100 * 1024 * 1024,
   BACKUP_MAX_ENTRIES: 5000,
   // Pre-import snapshots retained per user. The count alone does not bound
-  // disk — nothing caps one snapshot's size — and these live on the same
+  // disk ظ¤ nothing caps one snapshot's size ظ¤ and these live on the same
   // volume as the SQLite database, so prune on total bytes as well.
   BACKUP_SNAPSHOT_KEEP: 5,
   BACKUP_SNAPSHOT_MAX_TOTAL_BYTES: 250 * 1024 * 1024,
@@ -261,32 +269,10 @@ export const APP_CONSTANTS = {
   RESIZABLE_PANEL_MAX_WIDTH_RATIO: 0.9,
 } as const;
 
-export const DAILY_GOALS = {
-  JOBS_MIN: 1,
-  JOBS_MAX: 100,
-  JOBS_TARGET: 5,
-  HOURS_MIN: 1,
-  HOURS_MAX: 24,
-  HOURS_TARGET: 2,
-  MONTHS_BACK: 12,
-} as const;
-
-export const COMPANY_SIZES = [
-  "1-10",
-  "11-50",
-  "51-200",
-  "201-500",
-  "501-1000",
-  "1001-5000",
-  "5001-10000",
-  "10000+",
-] as const;
-
-export const COMPANY_NOTES_MAX_LENGTH = 5000;
-
 export const SCHEDULER_CONSTANTS = {
   ENABLED: true,
   CRON_EXPRESSION: "0 * * * *", // Every hour at minute 0
+  PRUNE_CRON_EXPRESSION: "0 3 * * *", // Daily at 03:00; reads filter anyway
   STALE_RUN_TIMEOUT_MS: 15 * 60 * 1000, // 15 min; reaper cutoff for stuck runs
 } as const;
 
@@ -313,6 +299,17 @@ export const CONTACT_ROLES = [
   { label: "Reference", value: "reference" },
 ] as const;
 
+export const COMPANY_SIZES = [
+  "1-10",
+  "11-50",
+  "51-200",
+  "201-1000",
+  "1001-5000",
+  "5000+",
+] as const;
+
+export const COMPANY_NOTES_MAX_LENGTH = 5000;
+
 export const JOB_STATUSES = [
   { label: "New", value: "new" },
   { label: "Draft", value: "draft" },
@@ -324,7 +321,54 @@ export const JOB_STATUSES = [
   { label: "Rejected", value: "rejected" },
   { label: "Expired", value: "expired" },
   { label: "Archived", value: "archived" },
+  { label: "Withdrawn", value: "withdrawn" },
 ] as const;
+
+// Seeded per user at signup and backfilled by the stages migration. `value`
+// must equal canonicalizeEntityValue(label): the status -> stage-type reverse
+// lookup keys on the status LABEL's canonical form, not on status.value, so
+// "Offer Accepted" cannot mint a second type beside "offer-accepted".
+export const JOB_STAGES = [
+  { label: "New", value: "new", status: "new", sortOrder: 0 },
+  { label: "Draft", value: "draft", status: "draft", sortOrder: 1 },
+  { label: "Applied", value: "applied", status: "applied", sortOrder: 2 },
+  { label: "Interview", value: "interview", status: "interview", sortOrder: 3 },
+  { label: "1st Screening Interview", value: "1st screening interview", status: "interview", sortOrder: 4 },
+  { label: "2nd Technical Interview", value: "2nd technical interview", status: "interview", sortOrder: 5 },
+  { label: "Final / Onsite Interview", value: "final / onsite interview", status: "interview", sortOrder: 6 },
+  { label: "Offer", value: "offer", status: "offer", sortOrder: 7 },
+  { label: "Offer Accepted", value: "offer accepted", status: "offer-accepted", sortOrder: 8 },
+  { label: "Offer Declined", value: "offer declined", status: "offer-declined", sortOrder: 9 },
+  { label: "Rejected", value: "rejected", status: "rejected", sortOrder: 10 },
+  { label: "Expired", value: "expired", status: "expired", sortOrder: 11 },
+  { label: "Archived", value: "archived", status: "archived", sortOrder: 12 },
+  { label: "Withdrawn", value: "withdrawn", status: "withdrawn", sortOrder: 13 },
+] as const;
+
+// Statuses whose stage types render greyed at the foot of the Stage History
+// list when the job has not reached them (D6). Offer alone: it reads as what a
+// job is working toward, and rejected/withdrawn are alternative endings, not
+// next steps. Both stay one click away in Add Stage.
+export const TERMINAL_STAGE_STATUSES = ["offer"] as const;
+
+// The fixed outcome set a stage may carry (spec's JobStage.outcome).
+export const STAGE_OUTCOMES = [
+  { label: "Scheduled", value: "scheduled" },
+  { label: "Completed", value: "completed" },
+  { label: "Passed", value: "passed" },
+  { label: "Failed", value: "failed" },
+  { label: "No-show", value: "no-show" },
+  { label: "Cancelled", value: "cancelled" },
+] as const;
+
+// Statuses you can only reach by applying: setting one marks the job applied.
+export const APPLIED_STATUS_VALUES: readonly string[] = [
+  "applied",
+  "interview",
+  "offer",
+  "offer-accepted",
+  "offer-declined",
+];
 
 // Zod's z.enum needs a non-empty tuple; JOB_STATUSES is the source of truth.
 export const JOB_STATUS_VALUES = JOB_STATUSES.map((s) => s.value) as unknown as [
@@ -338,68 +382,82 @@ export const DISCOVERY_STATUSES = [
   { label: "Dismissed", value: "dismissed" },
 ] as const;
 
-export const APPLIED_STATUS_VALUES = [
-  "applied",
-  "interview",
-  "offer",
-  "offer-accepted",
-  "offer-declined",
-  "rejected",
-];
-
-export const AI_USAGE_CONSTANTS = {
-  RETENTION_DAYS: 30,
-} as const;
-
-export const NOTIFICATION_CONSTANTS = {
-  RETENTION_DAYS: 30,
-} as const;
-
 export const SIDEBAR_LINKS = [
   {
     icon: LayoutDashboard,
     route: "/dashboard",
-    label: "لوحة التحكم",
+    label: "Dashboard",
   },
   {
     icon: BriefcaseBusiness,
     route: "/dashboard/myjobs",
-    label: "الوظائف",
+    label: "Jobs",
+  },
+  {
+    icon: CalendarCheck,
+    route: "/dashboard/interviews",
+    label: "Interviews",
   },
   {
     icon: Zap,
     route: "/dashboard/automations",
-    label: "الأتمتة والبحث",
+    label: "Automations",
   },
   {
     icon: SquareCheckBig,
     route: "/dashboard/tasks",
-    label: "المهام",
+    label: "Tasks",
   },
   {
     icon: CalendarClock,
     route: "/dashboard/activities",
-    label: "الأنشطة",
+    label: "Activities",
   },
   {
     icon: BookOpen,
     route: "/dashboard/questions",
-    label: "بنك الأسئلة",
+    label: "Questions",
   },
   {
     icon: UserRound,
     route: "/dashboard/profile",
-    label: "السيرة الذاتية",
+    label: "Profile",
   },
   {
     icon: Sheet,
     route: "/dashboard/admin",
-    label: "المكتبة",
+    label: "Library",
   },
   {
     icon: Wrench,
     route: "/dashboard/developer",
-    label: "خيارات المطور",
+    label: "Developer Options",
     devOnly: true,
   },
 ];
+
+export const NOTIFICATION_CONSTANTS = {
+  RETENTION_DAYS: 30,
+  POPOVER_LIMIT: 20,
+  PAGE_SIZE: 50,
+} as const;
+
+export const AI_USAGE_CONSTANTS = {
+  RETENTION_DAYS: 90,
+  RECENT_LIMIT: 50,
+  // Ollama drops the oldest context silently on overflow, so "near" is the
+  // only warning available.
+  CONTEXT_WARN_RATIO: 0.9,
+} as const;
+
+// Hard-coded until goals become a user setting
+export const DAILY_GOALS = {
+  JOBS_TARGET: 5,
+  HOURS_TARGET: 4,
+  JOBS_MIN: 1,
+  JOBS_MAX: 50,
+  HOURS_MIN: 1,
+  HOURS_MAX: 24,
+  // Months browsable before the current one
+  MONTHS_BACK: 11,
+} as const;

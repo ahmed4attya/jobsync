@@ -17,6 +17,7 @@ model User {
   Activity         Activity[]
   ActivityType     ActivityType[]
   ApiKey           ApiKey[]
+  Application      Application[]
   Automation       Automation[]
   ChatConversation ChatConversation?
   Company          Company[]
@@ -79,6 +80,7 @@ model Resume {
   FileId         String?         @unique
   reviewData     String?
   Automation     Automation[]
+  Applications   Application[]
   ContactInfo    ContactInfo?
   Job            Job[]
   File           File?           @relation(fields: [FileId], references: [id])
@@ -96,6 +98,7 @@ model CoverLetter {
   updatedAt DateTime @updatedAt
   profile   Profile  @relation(fields: [profileId], references: [id])
   Job       Job[]
+  Applications Application[]
 }
 
 model File {
@@ -316,6 +319,7 @@ model Company {
   contacts         Contact[]        @relation("ContactCompany")
   jobsApplied      Job[]
   workExperiences  WorkExperience[]
+  applySettings    CompanyApplySettings?
 
   @@unique([value, createdBy])
   @@unique([createdBy, atsProvider, atsToken])
@@ -377,6 +381,7 @@ model Job {
   JobTitle                JobTitle     @relation(fields: [jobTitleId], references: [id])
   Status                  JobStatus    @relation(fields: [statusId], references: [id])
   User                    User         @relation(fields: [userId], references: [id])
+  Applications            Application[]
   contactLinks            JobContact[]
   Notes                   Note[]
   tags                    Tag[]        @relation("JobToTag")
@@ -565,4 +570,56 @@ model ChatConversation {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Apply-engine models. SQLite has no Prisma enums, so enum-like values are
+// documented strings (project convention, like Job.discoveryStatus):
+//   Application.status: DRAFT | READY_REVIEW | SUBMITTED | FAILED | SKIPPED_MANUAL
+//   Application.submissionMode: MANUAL_CONFIRM | AUTO
+//   ApplicationEvent.type: EXTRACTED | FILLED | UPLOAD | CONFIRM_WAIT | SUBMITTED | FAILED | CAPTCHA_FALLBACK | DRY_RUN
+model Application {
+  id              String             @id @default(uuid())
+  userId          String
+  jobId           String
+  resumeId        String?
+  coverLetterId   String?
+  sourceUrl       String
+  atsProvider     String?
+  status          String             @default("DRAFT")
+  submissionMode  String             @default("MANUAL_CONFIRM")
+  fieldCoverage   Float?
+  uniqueApplyKey  String             @unique
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  User            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Job             Job                @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  Resume          Resume?            @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+  CoverLetter     CoverLetter?       @relation(fields: [coverLetterId], references: [id], onDelete: SetNull)
+  events          ApplicationEvent[]
+
+  @@index([userId])
+  @@index([jobId])
+  @@index([userId, status])
+}
+
+model ApplicationEvent {
+  id            String      @id @default(uuid())
+  applicationId String
+  type          String
+  payload       Json?
+  createdAt     DateTime    @default(now())
+  Application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+  @@index([applicationId, type])
+}
+
+model CompanyApplySettings {
+  companyId        String    @id
+  autoApplyEnabled Boolean   @default(false)
+  dryRunsCompleted Int       @default(0)
+  dailyCap         Int       @default(5)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  Company          Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
 }

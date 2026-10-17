@@ -14,6 +14,7 @@ import { JobResponse } from "@/models/job.model";
 import { CirclePlay } from "lucide-react";
 import { format } from "date-fns";
 import Link from "next/link";
+import { ar } from "@/lib/i18n/ar";
 
 type RecentActivity = {
   id: string;
@@ -83,8 +84,8 @@ export default function RecentCardToggle({
     <Card className="mb-2 @3xl/main:mb-0">
       <CardHeader>
         <div className="flex items-center justify-between gap-2">
-          <CardTitle className="text-lg text-green-600 min-w-0 truncate">
-            Recent {tabs[activeIndex]}
+          <CardTitle className="text-lg text-primary min-w-0 truncate">
+            {activeIndex === 0 ? "أحدث الوظائف" : "أحدث الأنشطة"}
           </CardTitle>
           <div
             className="flex shrink-0 rounded-md border text-xs"
@@ -96,20 +97,30 @@ export default function RecentCardToggle({
                 onClick={() => selectTab(index)}
                 className={cn(
                   "px-2 py-1 transition-colors",
-                  index === 0 && "rounded-l-md",
-                  index === tabs.length - 1 && "rounded-r-md",
+                  index === 0 && "rounded-s-md",
+                  index === tabs.length - 1 && "rounded-e-md",
                   activeIndex === index
                     ? "bg-primary text-primary-foreground"
                     : "hover:bg-muted",
                 )}
               >
-                {tab}
+                {tab === "Jobs" ? "الوظائف" : "الأنشطة"}
               </button>
             ))}
           </div>
         </div>
       </CardHeader>
       <CardContent className="grid auto-rows-max gap-6 px-4">
+        {activeIndex === 0 && jobs.length === 0 && (
+          <p className="text-sm text-muted-foreground text-center py-6">
+            {ar.empty.noJobs}
+          </p>
+        )}
+        {activeIndex === 1 && activities.length === 0 && (
+          <p className="text-sm text-muted-foreground text-center py-6">
+            {ar.empty.noActivity}
+          </p>
+        )}
         {activeIndex === 0
           ? groupJobsByDate(jobs).map(([date, dateJobs]) => (
               <div key={date} className="grid gap-4">

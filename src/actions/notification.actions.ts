@@ -41,6 +41,9 @@ function toItems(rows: Array<{ payload: string } & Record<string, unknown>>) {
 export async function getNotificationSummary() {
   try {
     const user = await requireUser();
+    if (!db?.notification?.count) {
+      return { success: true, data: { unread: 0, unreadErrors: 0 } };
+    }
     const base = {
       userId: user.id,
       readAt: null,

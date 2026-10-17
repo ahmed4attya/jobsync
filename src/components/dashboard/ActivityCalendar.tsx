@@ -16,6 +16,8 @@ import {
 // no chart will be rendered.
 // website examples showcase many properties,
 // you'll often use just a few of them.
+import { ar } from "@/lib/i18n/ar";
+
 export default function ActivityCalendar({
   years,
   dataByYear,
@@ -34,10 +36,10 @@ export default function ActivityCalendar({
     <Card className="w-[100%]">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg text-green-600">Activity Calendar</CardTitle>
+          <CardTitle className="text-lg text-primary">{ar.chart.activityCalendar}</CardTitle>
           <Select value={year} onValueChange={setYear}>
             <SelectTrigger className="w-[100px]" aria-label="Select year">
-              <SelectValue placeholder="Select year" />
+              <SelectValue placeholder="اختر السنة" />
             </SelectTrigger>
             <SelectContent>
               {years.map((y) => (
@@ -49,7 +51,7 @@ export default function ActivityCalendar({
           </Select>
         </div>
       </CardHeader>
-      <CardContent className="h-[200px]">
+      <CardContent className="h-[200px]" dir="ltr">
         <ResponsiveCalendar
           data={data}
           from={`${year}-04-02`}

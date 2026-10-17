@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 import type { GcMonthSummaryProps } from "react-goal-calendar";
 import { DAILY_GOALS } from "@/lib/constants";
+import { ar } from "@/lib/i18n/ar";
 import {
   GoalTargetsSchema,
   type GoalStreaks,
@@ -21,10 +22,14 @@ export const DEFAULT_GOAL_TARGETS: GoalTargets = {
   hours: DAILY_GOALS.HOURS_TARGET,
 };
 
-const MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
+const MONTH_RE = /^(\d{4})-(\d{1,2})$/;
 
 export function isValidMonth(month: unknown): month is string {
-  return typeof month === "string" && MONTH_PATTERN.test(month);
+  if (typeof month !== "string") return false;
+  const m = MONTH_RE.exec(month.trim());
+  if (!m) return false;
+  const mm = Number(m[2]);
+  return mm >= 1 && mm <= 12;
 }
 
 // Settings JSON is not schema-checked by Prisma; ignore anything malformed
@@ -51,12 +56,19 @@ export function resolveTargets(
 }
 
 export function shiftMonth(month: string, delta: number): string {
-  const [year, monthIndex] = month.split("-").map(Number);
+  if (!isValidMonth(month)) {
+    console.warn(`[dailyGoals] shiftMonth received invalid month: ${JSON.stringify(month)} — falling back to current month`);
+    return shiftMonth(format(new Date(), "yyyy-MM"), delta);
+  }
+  const [year, monthIndex] = month.trim().split("-").map(Number);
   return format(new Date(year, monthIndex - 1 + delta, 1), "yyyy-MM");
 }
 
 export function monthBounds(month: string): { start: Date; end: Date } {
-  const [year, monthIndex] = month.split("-").map(Number);
+  if (!isValidMonth(month)) {
+    month = format(new Date(), "yyyy-MM");
+  }
+  const [year, monthIndex] = month.trim().split("-").map(Number);
   return {
     start: new Date(year, monthIndex - 1, 1, 0, 0, 0, 0),
     // Day 0 of the next month is the last day of this one
@@ -68,9 +80,12 @@ export function goalMonthRange(today: string): {
   minMonth: string;
   maxMonth: string;
 } {
-  const maxMonth = today.slice(0, 7);
+  let maxMonth = today?.slice(0, 7);
+  if (!isValidMonth(maxMonth)) {
+    maxMonth = format(new Date(), "yyyy-MM");
+  }
   return {
-    minMonth: shiftMonth(maxMonth, -DAILY_GOALS.MONTHS_BACK),
+    minMonth: shiftMonth(maxMonth, -(DAILY_GOALS.MONTHS_BACK ?? 12)),
     maxMonth,
   };
 }
@@ -105,7 +120,7 @@ export function buildGoalValues(
 export type MonthSummary = NonNullable<GcMonthSummaryProps["data"]>[string];
 
 export function formatDays(count: number): string {
-  return `${count} ${count === 1 ? "day" : "days"}`;
+  return `${count} ${ar.stats.days}`;
 }
 
 const IDS = Object.values(GOAL_IDS);
@@ -147,18 +162,18 @@ export function buildMonthSummary(
     rings,
     stats: [
       {
-        label: "Current streak",
+        label: ar.stats.currentStreak,
         value: streaks ? formatDays(streaks.current) : "—",
         tone: "primary",
       },
       {
-        label: "Best streak (12 mo)",
+        label: ar.stats.bestStreak,
         value: streaks ? formatDays(streaks.best) : "—",
         tone: "warning",
       },
-      { label: "Both goals met", value: formatDays(bothMet), tone: "success" },
+      { label: ar.stats.bothGoalsMet, value: formatDays(bothMet), tone: "success" },
       {
-        label: "Nothing logged",
+        label: ar.stats.nothingLogged,
         value: formatDays(nothingLogged),
         tone: "danger",
       },

@@ -13,6 +13,7 @@ import {
   OTHER_SLICE_ID,
   otherBucketLabel,
 } from "./jobsActivityChart";
+import { ar } from "@/lib/i18n/ar";
 
 type ChartConfig = {
   label: string;
@@ -103,12 +104,12 @@ export default function WeeklyBarChartToggle({
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between gap-2 mb-1 mt-3">
           <div className="flex items-baseline gap-2 min-w-0">
-            <CardTitle className="text-lg text-green-600 truncate">
-              Weekly {current.label}
+            <CardTitle className="text-lg text-primary truncate">
+              {current.label === "Activities" ? ar.chart.weeklyActivities : ar.chart.weeklyJobs}
             </CardTitle>
             {totalHours !== null && (
               <span className="text-sm text-muted-foreground whitespace-nowrap">
-                {totalHours.toFixed(1)} hrs
+                {totalHours.toFixed(1)} س
               </span>
             )}
           </div>
@@ -122,14 +123,14 @@ export default function WeeklyBarChartToggle({
                 onClick={() => selectTab(index)}
                 className={cn(
                   "px-2 py-1 transition-colors",
-                  index === 0 && "rounded-l-md",
-                  index === charts.length - 1 && "rounded-r-md",
+                  index === 0 && "rounded-s-md",
+                  index === charts.length - 1 && "rounded-e-md",
                   activeIndex === index
                     ? "bg-primary text-primary-foreground"
                     : "hover:bg-muted",
                 )}
               >
-                {chart.label}
+                {chart.label === "Activities" ? "الأنشطة" : "الوظائف"}
               </button>
             ))}
           </div>
@@ -137,7 +138,7 @@ export default function WeeklyBarChartToggle({
       </CardHeader>
 
       <CardContent className="h-[240px] p-3 pt-1">
-        <div className="h-[200px]">
+        <div className="h-[200px]" dir="ltr">
           <ResponsiveBar
             data={roundedData}
             keys={current.keys}

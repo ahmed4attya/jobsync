@@ -65,17 +65,17 @@ export default async function Dashboard() {
           <WeeklyBarChartToggle
             charts={[
               {
-                label: "Jobs",
-                data: weeklyData,
-                keys: ["value"],
-                axisLeftLegend: "JOBS APPLIED",
-              },
-              {
                 label: "Activities",
                 data: activitiesData.data,
                 keys: activitiesData.keys,
                 groupMode: "stacked",
-                axisLeftLegend: "TIME SPENT (Hours)",
+                axisLeftLegend: "ساعات النشاط",
+              },
+              {
+                label: "Jobs",
+                data: weeklyData,
+                keys: ["value"],
+                axisLeftLegend: "الوظائف المُقدَّمة",
               },
             ]}
           />

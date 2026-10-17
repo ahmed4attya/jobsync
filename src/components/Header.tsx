@@ -12,7 +12,6 @@ import {
 import { SIDEBAR_LINKS } from "@/lib/constants";
 import SidebarToggle from "./SidebarToggle";
 import { AgentChatTrigger } from "./AgentChatTrigger";
-import { NotificationBell } from "./notifications/NotificationBell";
 
 async function Header() {
   return (
@@ -24,8 +23,8 @@ async function Header() {
             <span className="sr-only">Toggle Menu</span>
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="sm:max-w-xs">
-          <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+        <SheetContent side="right" className="sm:max-w-xs">
+          <SheetTitle className="sr-only">قائمة التنقل</SheetTitle>
           <nav className="grid gap-6 text-lg font-medium">
             <SheetClose asChild>
               <Link
@@ -58,7 +57,7 @@ async function Header() {
       </Sheet>
       <SidebarToggle />
       <h1 className="font-semibold">
-        JobSync<span className="hidden sm:inline"> - Job Search Assistant</span>
+        JobSync<span className="hidden sm:inline"> — مساعد البحث عن الوظائف</span>
       </h1>
       <div className="relative ml-auto flex-1 md:grow-0">
         {/* <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -70,7 +69,6 @@ async function Header() {
         /> */}
       </div>
 
-      <NotificationBell />
       <AgentChatTrigger />
     </header>
   );

@@ -26,17 +26,19 @@ import type {
   GoalTargetsByMonth,
 } from "@/models/dailyGoals.model";
 
+import { ar } from "@/lib/i18n/ar";
+
 // The summary's rings need labels only; targets vary by month
 const RINGS = [
-  { id: GOAL_IDS.JOBS, label: "Jobs applied" },
-  { id: GOAL_IDS.HOURS, label: "Activity" },
+  { id: GOAL_IDS.JOBS, label: ar.stats.jobsApplied },
+  { id: GOAL_IDS.HOURS, label: ar.stats.activity },
 ];
 
-const CALENDAR_LABELS = { settings: "Set goals" };
+const CALENDAR_LABELS = { settings: "تحديد الأهداف" };
 
 const goalsFor = (targets: GoalTargets): GcGoal[] => [
   { ...RINGS[0], target: targets.jobs },
-  { ...RINGS[1], target: targets.hours, unit: "h" },
+  { ...RINGS[1], target: targets.hours, unit: "س" },
 ];
 
 interface DailyGoalsCalendarProps {
@@ -115,10 +117,10 @@ export default function DailyGoalsCalendar({
 
   return (
     <>
-      <Card {...cardProps}>
+      <Card {...cardProps} dir="ltr">
         <GcMonthSummary rings={RINGS} data={summaries} {...monthProps} />
       </Card>
-      <Card {...cardProps}>
+      <Card {...cardProps} dir="ltr">
         <GcMonthCalendar
           goals={goalsFor(targetsFor(month))}
           values={valuesByMonth[month]}

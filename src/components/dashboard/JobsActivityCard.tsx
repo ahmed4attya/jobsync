@@ -13,6 +13,7 @@ import {
 import { useElementWidth } from "@/hooks/useElementWidth";
 import { usePersistedTabIndex } from "@/hooks/usePersistedTabIndex";
 import { APP_CONSTANTS } from "@/lib/constants";
+import { ar } from "@/lib/i18n/ar";
 import { cn } from "@/lib/utils";
 import {
   ARC_LABEL_TEXT_COLOR,
@@ -109,8 +110,8 @@ export default function JobsActivityCard({ data }: JobsActivityCardProps) {
     <Card className="@lg:col-span-2">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between gap-2">
-          <CardTitle className="text-lg text-green-600 min-w-0 truncate">
-            Jobs &amp; Activity
+          <CardTitle className="text-lg text-primary min-w-0 truncate">
+            {ar.chart.jobsActivity}
           </CardTitle>
           <div
             className="flex shrink-0 rounded-md border text-xs"
@@ -122,41 +123,34 @@ export default function JobsActivityCard({ data }: JobsActivityCardProps) {
                 onClick={() => selectTab(index)}
                 className={cn(
                   "px-2 py-1 transition-colors",
-                  index === 0 && "rounded-l-md",
-                  index === data.length - 1 && "rounded-r-md",
+                  index === 0 && "rounded-s-md",
+                  index === data.length - 1 && "rounded-e-md",
                   activeIndex === index
                     ? "bg-primary text-primary-foreground"
                     : "hover:bg-muted",
                 )}
               >
-                {item.label}
+                {item.label === "7d" ? ar.range["7d"] : item.label === "30d" ? ar.range["30d"] : item.label}
               </button>
             ))}
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <div ref={chartRef} className="relative h-[200px] w-full">
+        <div ref={chartRef} className="relative h-[200px] w-full" dir="ltr">
           {slices.length === 0 ? (
             <div className="flex h-full w-full items-center justify-center">
               <div className="h-[132px] w-[132px] rounded-full border-[18px] border-muted" />
               <p className="absolute inset-x-0 bottom-0 text-center text-sm text-muted-foreground">
-                No activities recorded
+                {ar.empty.noActivity}
               </p>
             </div>
           ) : (
             chartWidth > 0 && (
               <Pie
                 data={slices}
-                // Sized from the card's own measurement rather than a second
-                // one of nivo's: two observers on this box update a frame
-                // apart, and the frame where the new gutters met the old
-                // width collapsed the donut to half its radius.
                 width={chartWidth}
                 height={CHART_HEIGHT}
-                // Width changes land on every frame of the panel's 200ms
-                // transition, so the donut tracks them instead of springing
-                // toward each one in turn.
                 animate={false}
                 margin={{
                   top: 26,
@@ -196,10 +190,10 @@ export default function JobsActivityCard({ data }: JobsActivityCardProps) {
                       whiteSpace: "nowrap",
                     }}
                   >
-                    <strong>{datum.data.label}</strong> — {datum.value}h
+                    <strong>{datum.data.label}</strong> — {datum.value} س
                     {datum.data.breakdown?.map((activity: TopActivityType) => (
                       <div key={activity.label}>
-                        {activity.label} — {activity.hours}h
+                        {activity.label} — {activity.hours} س
                       </div>
                     ))}
                   </div>
@@ -217,7 +211,7 @@ export default function JobsActivityCard({ data }: JobsActivityCardProps) {
                 roomyTotal ? "text-xl" : "text-base",
               )}
             >
-              {totalHours}h
+              {totalHours} س
             </span>
             <span
               className={cn(
@@ -225,7 +219,7 @@ export default function JobsActivityCard({ data }: JobsActivityCardProps) {
                 roomyTotal ? "text-sm" : "text-xs",
               )}
             >
-              {jobsApplied} {jobsApplied === 1 ? "job" : "jobs"}
+              {jobsApplied} وظيفة
             </span>
             {jobsTrend !== 0 && roomyTotal && (
               <span

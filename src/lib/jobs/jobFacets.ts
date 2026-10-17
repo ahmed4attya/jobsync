@@ -67,11 +67,11 @@ export function writeJobFacets(
   return next;
 }
 
-export const countJobFacets = (facets: JobFacets) =>
-  facets.statuses.length +
-  facets.jobTypes.length +
-  facets.workplaces.length +
-  Number(facets.acceptedDiscovered) +
-  Number(facets.includeDismissed);
+export const countJobFacets = (facets?: JobFacets | null) =>
+  (facets?.statuses?.length ?? 0) +
+  (facets?.jobTypes?.length ?? 0) +
+  (facets?.workplaces?.length ?? 0) +
+  Number(facets?.acceptedDiscovered ?? false) +
+  Number(facets?.includeDismissed ?? false);
 
 export const hasJobFacets = (facets: JobFacets) => countJobFacets(facets) > 0;

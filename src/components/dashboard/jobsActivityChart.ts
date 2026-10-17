@@ -1,4 +1,5 @@
 import { TopActivityType } from "@/actions/dashboard.actions";
+import { ar } from "@/lib/i18n/ar";
 
 // Donut hues, validated for colorblind separation against each theme's
 // card surface. The app's own --chart-* tokens fail that check here:
@@ -32,6 +33,15 @@ export interface DonutSlice {
   breakdown?: TopActivityType[];
 }
 
+function translateActivity(label: string): string {
+  const norm = label.trim().toLowerCase();
+  if (norm === "job search") return ar.cat.jobSearch;
+  if (norm === "interview prep") return ar.cat.interviewPrep;
+  if (norm === "side project") return ar.cat.sideProject;
+  if (norm === "other") return ar.cat.other;
+  return label;
+}
+
 // Hues are assigned by rank and never cycled, so a slice keeps its color
 // for as long as the activity keeps its position.
 export function buildDonutSlices(
@@ -44,7 +54,7 @@ export function buildDonutSlices(
     .filter((activity) => activity.hours > 0)
     .map((activity, index) => ({
       id: activity.label,
-      label: activity.label,
+      label: translateActivity(activity.label),
       value: activity.hours,
       color: SERIES_COLORS[theme][index],
     }));
@@ -52,7 +62,7 @@ export function buildDonutSlices(
   if (otherHours > 0) {
     slices.push({
       id: OTHER_SLICE_ID,
-      label: otherBucketLabel(topActivities.map((activity) => activity.label)),
+      label: ar.cat.other,
       value: otherHours,
       color: OTHER_COLOR[theme],
       breakdown: otherActivities.filter((activity) => activity.hours > 0),
@@ -71,10 +81,10 @@ export const ARC_LABEL_TEXT_COLOR = {
 
 // Arc link label geometry. The gutters either side of the donut hold these
 // labels; anything wider than the gutter runs off the SVG and is clipped.
-const ARC_LABEL_CHAR_WIDTH = 6;
-const ARC_LABEL_LINK_LENGTH = 26;
-const MAX_ARC_LABEL_GUTTER = 100;
-const MIN_ARC_LABEL_GUTTER = 76;
+const ARC_LABEL_CHAR_WIDTH = 7;
+const ARC_LABEL_LINK_LENGTH = 20;
+const MAX_ARC_LABEL_GUTTER = 130;
+const MIN_ARC_LABEL_GUTTER = 95;
 
 // The chart box is 200px tall with 26px above and below the donut.
 export const CHART_HEIGHT = 200;
@@ -126,5 +136,5 @@ export function arcLabelLines(
       ? `${slice.label.slice(0, maxChars - 1).trimEnd()}…`
       : slice.label;
 
-  return [name, `${slice.value}h`];
+  return [name, `${slice.value} س`];
 }

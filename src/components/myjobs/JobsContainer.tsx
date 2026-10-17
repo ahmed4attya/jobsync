@@ -10,14 +10,12 @@ import {
 import { toastError, toastSuccess } from "@/lib/toast";
 import {
   Company,
-  JOB_SORT_FIELDS,
   JobLocation,
   JobSource,
   JobStatus,
   JobTitle,
   Tag,
 } from "@/models/job.model";
-import { useSort } from "@/hooks/useSort";
 import Loading from "../Loading";
 import { useRouter } from "next/navigation";
 import MyJobsTable from "./MyJobsTable";
@@ -27,8 +25,6 @@ import { useJobFilters } from "./jobs-container/useJobFilters";
 import { useJobsList } from "./jobs-container/useJobsList";
 import { downloadJobsList } from "./jobs-container/downloadJobsCsv";
 import { JobsToolbar } from "./jobs-container/JobsToolbar";
-import { EMPTY_JOB_FACETS, hasJobFacets } from "@/lib/jobs/jobFacets";
-import { Button } from "../ui/button";
 
 type MyJobsProps = {
   statuses: JobStatus[];
@@ -71,20 +67,19 @@ function JobsContainer({
     applyFacets,
   } = useJobFilters({ companies, titles, locations, sources });
 
-  const { sort, toggleSort } = useSort(JOB_SORT_FIELDS);
-
   const {
     jobs,
     viewMode,
     onChangeViewMode,
     totalJobs,
+    filterKey,
     searchTerm,
     setSearchTerm,
     initialLoading,
-    listLoaded,
     loadingMore,
     loadJobs,
     reloadJobs,
+    onFilterChange,
     sentinelRef,
   } = useJobsList({
     companyFilter,
@@ -92,8 +87,6 @@ function JobsContainer({
     titleFilter,
     locationFilter,
     sourceFilter,
-    facets,
-    sort,
   });
 
   const onDeleteJob = async (jobId: string) => {
@@ -152,18 +145,11 @@ function JobsContainer({
           onClearLocationFilter={clearLocationFilter}
           sourceLabel={sourceLabel}
           onClearSourceFilter={clearSourceFilter}
-          onReload={() => loadJobs(1, searchTerm || undefined)}
+          onReload={() => loadJobs(1, filterKey, searchTerm || undefined)}
           searchTerm={searchTerm}
           onSearchTermChange={setSearchTerm}
-          facets={facets}
-          onApplyFacets={applyFacets}
-          scope={{
-            companyValue: companyFilter || undefined,
-            appliedOnly: appliedFilter || undefined,
-            titleValue: titleFilter || undefined,
-            locationValue: locationFilter || undefined,
-            sourceValue: sourceFilter || undefined,
-          }}
+          filterKey={filterKey}
+          onFilterChange={onFilterChange}
           onDownload={downloadJobsList}
           statuses={statuses}
           companies={companies}
@@ -174,24 +160,12 @@ function JobsContainer({
           editJob={editJob}
           resetEditJob={resetEditJob}
           addJobInitialOpen={queryParams.get("add-job") === "true"}
+          facets={facets}
+          onApplyFacets={applyFacets}
+          scope="tracked"
         />
         <CardContent>
           {initialLoading && <Loading />}
-          {!initialLoading &&
-            listLoaded &&
-            jobs.length === 0 &&
-            hasJobFacets(facets) && (
-            <div className="flex flex-col items-center gap-2 py-10 text-sm text-muted-foreground">
-              <p>No jobs match these filters.</p>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => applyFacets(EMPTY_JOB_FACETS)}
-              >
-                Clear all
-              </Button>
-            </div>
-          )}
           {jobs.length > 0 &&
             (viewMode === "cards" ? (
               <MyJobsGrid
@@ -210,8 +184,6 @@ function JobsContainer({
                 editJob={onEditJob}
                 onChangeJobStatus={onChangeJobStatus}
                 onAddNote={onAddNote}
-                sort={sort}
-                onSort={toggleSort}
               />
             ))}
           {jobs.length < totalJobs && (

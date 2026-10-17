@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import "react-goal-calendar/style.css";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
@@ -27,7 +28,7 @@ interface Props {
 
 export default function RootLayout({ children }: Readonly<Props>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="ar" dir="rtl" suppressHydrationWarning>
       <body
         className={cn(
           "min-h-screen bg-background font-sans antialiased",

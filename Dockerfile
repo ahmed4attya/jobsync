@@ -9,6 +9,9 @@ WORKDIR /app
 
 # Install dependencies based on the preferred package manager
 COPY package.json package-lock.json* ./
+# Playwright is a host-side apply-worker dependency; the container never
+# launches a browser, so skip its browser download during npm ci.
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 RUN npm ci
 
 # Rebuild the source code only when needed

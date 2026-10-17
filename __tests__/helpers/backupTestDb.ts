@@ -13,11 +13,17 @@ export function makeTestDbUrl(): { url: string; dir: string } {
 
 // db push rather than migrate deploy: the round-trip asserts against the
 // current schema, not the migration history, and push is much faster.
+// Windows: npx is a .cmd shim and Node (CVE-2024-27980 hardening) refuses to
+// spawn .cmd without a shell — plain "npx" gave ENOENT, "npx.cmd" gave EINVAL.
 export function pushSchema(url: string): void {
   execFileSync(
     "npx",
     ["prisma", "db", "push", "--skip-generate", "--accept-data-loss"],
-    { env: { ...process.env, DATABASE_URL: url }, stdio: "pipe" },
+    {
+      env: { ...process.env, DATABASE_URL: url },
+      stdio: "pipe",
+      shell: process.platform === "win32",
+    },
   );
 }
 

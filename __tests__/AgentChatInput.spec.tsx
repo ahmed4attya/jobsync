@@ -155,7 +155,12 @@ describe("AgentChatInput", () => {
       ],
     };
     render(<AgentChatInput />);
-    expect(screen.getByText(/pasted posting · 1,234 chars/i)).toBeInTheDocument();
+    // Locale-agnostic on purpose: toLocaleString() follows the host locale
+    // (Arabic-Indic digits on an ar locale machine), so assert the chip's
+    // structure, not en-US digits.
+    expect(
+      screen.getByText(/pasted posting · .+ chars$/i),
+    ).toBeInTheDocument();
   });
 
   it("hands the discard back to the provider", async () => {

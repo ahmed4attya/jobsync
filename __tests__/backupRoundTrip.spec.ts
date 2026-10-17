@@ -44,8 +44,19 @@ beforeAll(async () => {
 
 afterAll(async () => {
   (APP_CONSTANTS as { UPLOADS_DIR: string }).UPLOADS_DIR = originalUploads;
+  // The @/lib/db mock (created in vi.mock above) holds a second PrismaClient
+  // on the same tmp db; without disconnecting it the rm below fails EPERM.
+  const mockedAppDb = (await import("@/lib/db")).default;
+  await mockedAppDb?.$disconnect?.();
   await prisma.$disconnect();
-  fs.rmSync(ctx.dir, { recursive: true, force: true });
+  // Windows: the SQLite engine can hold the directory handle for a moment
+  // after disconnect, which fails rm with EPERM. Retries are the supported fix.
+  fs.rmSync(ctx.dir, {
+    recursive: true,
+    force: true,
+    maxRetries: 10,
+    retryDelay: 250,
+  });
 });
 
 async function seedFullAccount() {

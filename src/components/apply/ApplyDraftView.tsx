@@ -24,6 +24,7 @@ import {
   Send,
   TerminalSquare,
 } from "lucide-react";
+import { ManualSubmitButton } from "./ManualSubmitButton";
 
 function StatusBadge({ status }: { status: string }) {
   const color =
@@ -114,6 +115,9 @@ export function ApplyDraftView({ draft }: { draft: ApplyDraftResponse }) {
         </div>
         <div className="flex items-center gap-2">
           {application ? <StatusBadge status={String(application.status)} /> : null}
+          {application && application.status !== "SUBMITTED" ? (
+            <ManualSubmitButton applicationId={application.id} />
+          ) : null}
           <Button variant="outline" size="sm" onClick={() => router.push(`/dashboard/myjobs/${job.id}`)}>
             Back to job
           </Button>

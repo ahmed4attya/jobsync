@@ -11,6 +11,8 @@ import { useSidebar } from "@/context/SidebarContext";
 import { cn } from "@/lib/utils";
 import { CurrentUser } from "@/models/user.model";
 
+import { useLanguage } from "@/context/LanguageContext";
+
 interface SidebarProps {
   user: CurrentUser | null;
   signOutAction: () => void;
@@ -19,14 +21,30 @@ interface SidebarProps {
 function Sidebar({ user, signOutAction }: SidebarProps) {
   const path = usePathname();
   const { expanded } = useSidebar();
+  const { t, isRtl } = useLanguage();
   const isOnDashboard = path === "/dashboard";
+
+  // Mapping from link label to translation key
+  const labelKeyMap: Record<string, keyof typeof t.sidebar> = {
+    Dashboard: "dashboard",
+    Jobs: "jobs",
+    Interviews: "interviews",
+    Automations: "automations",
+    Tasks: "tasks",
+    Activities: "activities",
+    Questions: "questions",
+    Profile: "profile",
+    Library: "library",
+    "Developer Options": "developer",
+  };
 
   return (
     <TooltipProvider delayDuration={300}>
       <aside
         id={APP_CONSTANTS.SIDEBAR_DOM_ID}
         className={cn(
-          "fixed inset-y-0 left-0 z-10 hidden flex-col border-r bg-background transition-[width] duration-200 ease-in-out sm:flex",
+          "fixed inset-y-0 z-10 hidden flex-col bg-background transition-[width,right,left] duration-200 ease-in-out sm:flex",
+          isRtl ? "right-0 border-l" : "left-0 border-r",
           expanded
             ? APP_CONSTANTS.SIDEBAR_WIDTH.expanded.rail
             : APP_CONSTANTS.SIDEBAR_WIDTH.collapsed.rail,
@@ -62,10 +80,12 @@ function Sidebar({ user, signOutAction }: SidebarProps) {
             if (item.devOnly && process.env.NODE_ENV !== "development") {
               return null;
             }
+            const key = labelKeyMap[item.label];
+            const translatedLabel = key && t.sidebar[key] ? t.sidebar[key] : item.label;
             return (
               <NavLink
                 key={item.label}
-                label={item.label}
+                label={translatedLabel}
                 Icon={item.icon}
                 route={item.route}
                 pathname={path}

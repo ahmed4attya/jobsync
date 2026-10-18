@@ -2,6 +2,7 @@
 
 import { useSidebar } from "@/context/SidebarContext";
 import { useAgentChat } from "@/components/agent/AgentChatProvider";
+import { useLanguage } from "@/context/LanguageContext";
 import { APP_CONSTANTS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +12,16 @@ import { cn } from "@/lib/utils";
 function SidebarInset({ children }: { children: React.ReactNode }) {
   const { expanded } = useSidebar();
   const { isOpen, panelWidth, isResizing } = useAgentChat();
+  const { isRtl } = useLanguage();
+
+  const contentOffset = isRtl
+    ? expanded
+      ? "sm:pr-56"
+      : "sm:pr-14"
+    : expanded
+      ? "sm:pl-56"
+      : "sm:pl-14";
+
   return (
     <div
       className={cn(
@@ -19,10 +30,8 @@ function SidebarInset({ children }: { children: React.ReactNode }) {
         isResizing
           ? "transition-none"
           : "transition-[padding] duration-200 ease-in-out",
-        expanded
-          ? APP_CONSTANTS.SIDEBAR_WIDTH.expanded.contentOffset
-          : APP_CONSTANTS.SIDEBAR_WIDTH.collapsed.contentOffset,
-        isOpen && "lg:pr-(--agent-chat-offset)"
+        contentOffset,
+        isOpen && (isRtl ? "lg:pl-(--agent-chat-offset)" : "lg:pr-(--agent-chat-offset)")
       )}
       // Only while open: panelWidth is seeded from localStorage, so emitting
       // it during SSR (always closed) is a hydration mismatch.

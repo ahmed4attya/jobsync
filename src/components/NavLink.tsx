@@ -38,7 +38,7 @@ function NavLink({ label, Icon, route, pathname, expanded }: NavLinkProps) {
       {isActive && (
         <span
           aria-hidden
-          className="absolute left-0 top-0 h-full w-0.5 bg-foreground"
+          className="absolute start-0 top-0 h-full w-0.5 bg-foreground"
         />
       )}
       {/* Fixed-width lead box (= collapsed rail width) so the icon sits at the

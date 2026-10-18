@@ -12,6 +12,8 @@ import {
 import { SIDEBAR_LINKS } from "@/lib/constants";
 import SidebarToggle from "./SidebarToggle";
 import { AgentChatTrigger } from "./AgentChatTrigger";
+import { LanguageToggle } from "./LanguageToggle";
+import { HeaderTitle } from "./HeaderTitle";
 
 async function Header() {
   return (
@@ -56,9 +58,7 @@ async function Header() {
         </SheetContent>
       </Sheet>
       <SidebarToggle />
-      <h1 className="font-semibold">
-        JobSync<span className="hidden sm:inline"> — مساعد البحث عن الوظائف</span>
-      </h1>
+      <HeaderTitle />
       <div className="relative ml-auto flex-1 md:grow-0">
         {/* <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
@@ -69,7 +69,10 @@ async function Header() {
         /> */}
       </div>
 
-      <AgentChatTrigger />
+      <div className="flex items-center gap-2">
+        <LanguageToggle />
+        <AgentChatTrigger />
+      </div>
     </header>
   );
 }

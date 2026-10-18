@@ -26,6 +26,8 @@ interface Props {
   children: React.ReactNode;
 }
 
+import { LanguageProvider } from "@/context/LanguageContext";
+
 export default function RootLayout({ children }: Readonly<Props>) {
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
@@ -41,8 +43,10 @@ export default function RootLayout({ children }: Readonly<Props>) {
           enableSystem
           disableTransitionOnChange
         >
-          {children}
-          <Toaster />
+          <LanguageProvider>
+            {children}
+            <Toaster />
+          </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>

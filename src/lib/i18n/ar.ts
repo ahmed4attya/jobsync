@@ -57,6 +57,18 @@ export const ar = {
     noJobs: "لا وظائف بعد",
     noActivity: "لا نشاط مُسجَّل",
   },
+  sidebar: {
+    dashboard: "لوحة التحكم",
+    jobs: "الوظائف",
+    interviews: "المقابلات",
+    automations: "الأتمتات",
+    tasks: "المهام",
+    activities: "الأنشطة",
+    questions: "الأسئلة",
+    profile: "الملف الشخصي",
+    library: "المكتبة",
+    developer: "خيارات المطور",
+  },
 } as const;
 
 export type TranslationKeys = typeof ar;

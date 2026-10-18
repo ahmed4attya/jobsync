@@ -1,8 +1,19 @@
 const { PrismaClient } = require("@prisma/client");
+const { PrismaLibSql } = require("@prisma/adapter-libsql");
 const fs = require("fs");
 const path = require("path");
+require("dotenv").config();
 
-const prisma = new PrismaClient();
+let prisma;
+if (process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN) {
+  const adapter = new PrismaLibSql({
+    url: process.env.TURSO_DATABASE_URL,
+    authToken: process.env.TURSO_AUTH_TOKEN,
+  });
+  prisma = new PrismaClient({ adapter });
+} else {
+  prisma = new PrismaClient();
+}
 
 function canonicalize(str) {
   if (!str) return "other";

@@ -24,6 +24,9 @@ export const metadata: Metadata = {
   title: "Dashboard",
 };
 
+// Revalidate dashboard stats every 30 seconds so repeated navigation is instantaneous
+export const revalidate = 30;
+
 export default async function Dashboard() {
   // Server-computed so server and browser agree on "today"
   const today = format(new Date(), "yyyy-MM-dd");

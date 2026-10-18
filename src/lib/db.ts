@@ -25,5 +25,9 @@ const prisma = globalThis.prismaGlobal ?? prismaClientSingleton();
 
 export default prisma;
 
-if (process.env.NODE_ENV !== "production") globalThis.prismaGlobal = prisma;
+// Cache prisma client globally in both production and development
+// to maximize connection reuse and avoid repeated SSL/TLS handshakes to Turso
+if (!globalThis.prismaGlobal) {
+  globalThis.prismaGlobal = prisma;
+}
 

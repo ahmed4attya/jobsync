@@ -1,0 +1,89 @@
+{
+  "_doc_1": "JobSync-Watch v2.0-CV — ملف الإعداد. هذه النسخة مفهرسة على السيرة الذاتية للمالك: أحمد جابر عطية — أخصائي دعم فني تقني أول، خميس مشيط / عسير، السعودية.",
+  "_doc_2": "profile = ملف التعريف المهني المستخرج من السيرة الذاتية. يقود: ترتيب الوظائف، شارات المطابقة، شارة «قريب من منطقتك»، بطاقة التقرير، وروابط البحث اليدوي.",
+  "_doc_3": "لينكدإن وإنديد وجادرات وبيت.كوم خارج الأتمتة عمداً (شروط الاستخدام) — تظهر في التقرير كروابط مراجعة يدوية جاهزة.",
+  "_doc_4": "كل مصدر في القائمة أدناه أثبت حياً بطلب فعلي قبل إدراجه (قاعدة 7). مرشحون جدد فحصوا في 2026-10-18 (tabby/foodics/sary/jahez/mrsool/neoleap/hala/Alshaya) وكلهم رُفضوا موثقين: 404 أو صفر سعودي — لا يُلحّ عليهم أحد (قاعدة 6).",
+
+  "version": "2.0-CV",
+
+  "profile": {
+    "name_ar": "أحمد جابر عطية",
+    "name_en": "Ahmed Gaber Attya",
+    "target_title": "Senior IT Technical Support Specialist",
+    "headline_ar": "أخصائي دعم فني تقني أول — خبرة تتجاوز 14 سنة في الدعم التقني وإدارة الأنظمة والشبكات والبنية التحتية التقنية",
+    "city_ar": "خميس مشيط — منطقة عسير، السعودية",
+    "email": "Ahmed4attya@gmail.com",
+    "linkedin": "https://www.linkedin.com/in/ahmed-attya-2b608429",
+    "experience_years": 14,
+
+    "top_skills": [
+      "Active Directory", "Windows Server 2019", "Microsoft 365", "Google Workspace",
+      "VMware / Hyper-V", "Cisco / Juniper", "VoIP", "Symantec Endpoint", "ITIL", "AWS"
+    ],
+
+    "_doc_primary": "المسميات المستهدفة (وزن 25 لكل إصابة في عنوان الوظيفة، حتى إصابتين): مشتقة مباشرة من مسار السيرة — دعم فني، إدارة أنظمة، إدارة تقنية.",
+    "primary_titles": [
+      "it support", "technical support", "it specialist", "it technician", "it engineer",
+      "service desk", "help desk", "helpdesk", "desktop support", "end user",
+      "system administrator", "systems administrator", "system admin", "sysadmin",
+      "it administrator", "it manager", "ict manager", "it infrastructure",
+      "information technology", "it operations", "it officer", "it coordinator",
+      "network administrator", "network engineer",
+      "دعم فني", "الدعم الفني", "تقنية معلومات", "تقنية المعلومات", "مدير تقنية",
+      "مختص تقنية", "مسؤول تقنية", "مسؤول نظم", "مدير نظم", "مهندس شبكات", "مسؤول شبكات"
+    ],
+
+    "_doc_skills": "المهارات التقنية من السيرة (وزن 8 لكل إصابة، حتى 3 إصابات): ترفع الوظيفة ذات الصلة إلى الأعلى.",
+    "skills": [
+      "active directory", "windows server", "office 365", "microsoft 365", "m365",
+      "google workspace", "vmware", "hyper-v", "hyperv", "virtualization",
+      "cisco", "juniper", "voip", "network", "networking",
+      "endpoint", "symantec", "antivirus", "cybersecurity", "information security",
+      "itil", "aws", "azure", "troubleshooting"
+    ],
+
+    "seniority_words": ["senior", "sr.", "sr ", "lead", "supervisor", "manager", "specialist", "administrator", "head of", "team lead"],
+
+    "_doc_home": "نطاقك الجغرافي الحالي وعمله في أبها: أي وظيفة فيهذه المدن تحمل شارة «قريب من منطقتك» +10 نقاط.",
+    "home_cities": [
+      "khamis mushait", "khamis", "mushait", "خميس مشيط", "خميس",
+      "abha", "أبها", "ابها", "aseer", "asir", "عسير",
+      "najran", "نجران", "jazan", "jizan", "جازان"
+    ],
+
+    "manual_searches": ["IT Support Specialist", "System Administrator", "IT Manager"]
+  },
+
+  "_doc_keywords": "احتياطي فقط: يُستخدم للترتيب إن حُذف قسم profile. وجود profile يلغى مفعولها.",
+  "keywords": ["engineer", "developer", "specialist", "analyst", "مطور", "مهندس", "تقنية", "IT"],
+
+  "max_jobs_per_source": 40,
+  "max_report_rows": 150,
+  "max_remote_rows": 60,
+  "include_remote_worldwide": true,
+
+  "sources": {
+    "greenhouse": { "enabled": true, "boards": ["lucidmotors", "tamara", "careem"] },
+    "smartrecruiters": { "enabled": true, "companies": ["DeliveryHero"] },
+    "wadhefa": { "enabled": true },
+    "remotive": { "enabled": true },
+    "jobicy": { "enabled": true },
+    "workingnomads": { "enabled": true },
+    "himalayas": { "enabled": true },
+    "lever": { "enabled": true, "companies": [] },
+    "ashby": { "enabled": true, "orgs": [] }
+  },
+
+  "manual_links": {
+    "linkedin": "https://www.linkedin.com/in/ahmed-attya-2b608429",
+    "jadarat": "https://jadarat.sa/",
+    "bayt": "https://www.bayt.com/ar/saudi-arabia/jobs/",
+    "mihnati": "https://www.mihnati.com/",
+    "indeed_تنبيه": "مرفوض للأتمتة نهائياً حسب دستور المشروع — تصفح يدوي بحت إن رغبت"
+  },
+
+  "delivery": {
+    "open_browser": true,
+    "_doc": "بعد كل تشغيل يفتح التقرير في المتصفح. البريد الإلكتروني غير مفعّل افتراضياً: إن أردته لاحقاً توضع بيانات SMTP في متغيرات بيئة JOBSYNC_SMTP_* فقط — لا أسرار داخل الملفات (قاعدة 5)."
+  }
+}
